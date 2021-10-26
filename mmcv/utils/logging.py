@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import logging
 
-import torch.distributed as dist
+# import torch.distributed as dist
 
 logger_initialized = {}
 

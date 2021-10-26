@@ -2,10 +2,10 @@
 import functools
 from inspect import getfullargspec
 
-import torch
+# import torch
 import paddle
 
-from .utils import cast_tensor_type
+from codes.core.fp16.utils import cast_tensor_type
 
 
 def auto_fp16(apply_to=None, out_fp32=False):
@@ -22,22 +22,6 @@ def auto_fp16(apply_to=None, out_fp32=False):
         out_fp32 (bool): Whether to convert the output back to fp32.
 
     :Example:
-
-        >>> import torch.nn as nn
-        >>> class MyModule1(nn.Module):
-        >>>
-        >>>     # Convert x and y to fp16
-        >>>     @auto_fp16()
-        >>>     def forward(self, x, y):
-        >>>         pass
-
-        >>> import torch.nn as nn
-        >>> class MyModule2(nn.Module):
-        >>>
-        >>>     # convert pred to fp16
-        >>>     @auto_fp16(apply_to=('pred', ))
-        >>>     def do_something(self, pred, others):
-        >>>         pass
     """
 
     def auto_fp16_wrapper(old_func):
@@ -64,7 +48,7 @@ def auto_fp16(apply_to=None, out_fp32=False):
                 for i, arg_name in enumerate(arg_names):
                     if arg_name in args_to_cast:
                         new_args.append(
-                            cast_tensor_type(args[i], paddle.Tensor.float, paddle.Tensor.half))
+                            cast_tensor_type(args[i], paddle.float32, paddle.float16))
                     else:
                         new_args.append(args[i])
             # convert the kwargs that need to be processed
@@ -73,14 +57,14 @@ def auto_fp16(apply_to=None, out_fp32=False):
                 for arg_name, arg_value in kwargs.items():
                     if arg_name in args_to_cast:
                         new_kwargs[arg_name] = cast_tensor_type(
-                            arg_value, tpaddle.Tensor.float, paddle.Tensor.half)
+                            arg_value, paddle.float32, paddle.float16)
                     else:
                         new_kwargs[arg_name] = arg_value
             # apply converted arguments to the decorated method
             output = old_func(*new_args, **new_kwargs)
             # cast the results back to fp32 if necessary
             if out_fp32:
-                output = cast_tensor_type(output, paddle.Tensor.half, paddle.Tensor.float)
+                output = cast_tensor_type(output, paddle.float16, paddle.float32)
             return output
 
         return new_func
@@ -104,21 +88,6 @@ def force_fp32(apply_to=None, out_fp16=False):
 
     :Example:
 
-        >>> import torch.nn as nn
-        >>> class MyModule1(nn.Module):
-        >>>
-        >>>     # Convert x and y to fp32
-        >>>     @force_fp32()
-        >>>     def loss(self, x, y):
-        >>>         pass
-
-        >>> import torch.nn as nn
-        >>> class MyModule2(nn.Module):
-        >>>
-        >>>     # convert pred to fp32
-        >>>     @force_fp32(apply_to=('pred', ))
-        >>>     def post_process(self, pred, others):
-        >>>         pass
     """
 
     def force_fp32_wrapper(old_func):
@@ -144,7 +113,7 @@ def force_fp32(apply_to=None, out_fp16=False):
                 for i, arg_name in enumerate(arg_names):
                     if arg_name in args_to_cast:
                         new_args.append(
-                            cast_tensor_type(args[i], paddle.Tensor.half, paddle.Tensor.float))
+                            cast_tensor_type(args[i], paddle.float16, paddle.float32))
                     else:
                         new_args.append(args[i])
             # convert the kwargs that need to be processed
@@ -153,14 +122,14 @@ def force_fp32(apply_to=None, out_fp16=False):
                 for arg_name, arg_value in kwargs.items():
                     if arg_name in args_to_cast:
                         new_kwargs[arg_name] = cast_tensor_type(
-                            arg_value, paddle.Tensor.half, paddle.Tensor.float)
+                            arg_value, paddle.float16, paddle.float32)
                     else:
                         new_kwargs[arg_name] = arg_value
             # apply converted arguments to the decorated method
             output = old_func(*new_args, **new_kwargs)
             # cast the results back to fp32 if necessary
             if out_fp16:
-                output = cast_tensor_type(output, paddle.Tensor.float, paddle.Tensor.half)
+                output = cast_tensor_type(output, paddle.float32, paddle.float16)
             return output
 
         return new_func

@@ -5,13 +5,13 @@ from abc import ABCMeta
 from collections import defaultdict
 from logging import FileHandler
 
-import torch.nn as nn
+import paddle.nn as nn
 
 from mmcv.runner.dist_utils import master_only
 from mmcv.utils.logging import get_logger, logger_initialized, print_log
 
 
-class BaseModule(nn.Module, metaclass=ABCMeta):
+class BaseModule(nn.Layer):
     """Base module for all modules in openmmlab.
 
     ``BaseModule`` is a wrapper of ``torch.nn.Module`` with additional
@@ -182,7 +182,7 @@ class Sequential(BaseModule, nn.Sequential):
         nn.Sequential.__init__(self, *args)
 
 
-class ModuleList(BaseModule, nn.ModuleList):
+class ModuleList(BaseModule, nn.LayerList):
     """ModuleList in openmmlab.
 
     Args:
@@ -192,4 +192,4 @@ class ModuleList(BaseModule, nn.ModuleList):
 
     def __init__(self, modules=None, init_cfg=None):
         BaseModule.__init__(self, init_cfg)
-        nn.ModuleList.__init__(self, modules)
+        nn.LayerList.__init__(self, modules)

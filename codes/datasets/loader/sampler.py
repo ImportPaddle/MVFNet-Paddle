@@ -5,10 +5,15 @@ from __future__ import division
 import math
 
 import numpy as np
-import torch
-from torch.distributed import get_rank, get_world_size
-from torch.utils.data import DistributedSampler as _DistributedSampler
-from torch.utils.data.sampler import Sampler
+# import torch
+# from torch.distributed import get_rank, get_world_size
+# from torch.utils.data import DistributedSampler as _DistributedSampler
+# from torch.utils.data.sampler import Sampler
+
+import paddle
+from paddle.distributed import get_rank,get_world_size
+from paddle.io import DistributedBatchSampler as _DistributedSampler
+from paddle.io import Sampler
 
 
 class GroupSampler(Sampler):
@@ -43,7 +48,7 @@ class GroupSampler(Sampler):
                 range(len(indices) // self.samples_per_gpu))
         ]
         indices = np.concatenate(indices)
-        indices = torch.from_numpy(indices).long()
+        indices = paddle.to_tensor(indices,dtype=paddle.int64)
         assert len(indices) == self.num_samples
         return iter(indices)
 
@@ -62,11 +67,9 @@ class DistributedSampler(_DistributedSampler):
     def __iter__(self):
         # deterministically shuffle based on epoch
         if self.shuffle:
-            g = torch.Generator()
-            g.manual_seed(self.epoch)
-            indices = torch.randperm(len(self.dataset), generator=g).tolist()
+            indices = paddle.randperm(len(self.dataset)).tolist()
         else:
-            indices = torch.arange(len(self.dataset)).tolist()
+            indices = paddle.arange(len(self.dataset)).tolist()
 
         # add extra samples to make it evenly divisible
         indices += indices[:(self.total_size - len(indices))]
@@ -121,16 +124,15 @@ class DistributedGroupSampler(Sampler):
 
     def __iter__(self):
         # deterministically shuffle based on epoch
-        g = torch.Generator()
-        g.manual_seed(self.epoch)
+        # g = torch.Generator()
+        # g.manual_seed(self.epoch)
 
         indices = []
         for i, size in enumerate(self.group_sizes):
             if size > 0:
                 indice = np.where(self.flag == i)[0]
                 assert len(indice) == size
-                indice = indice[list(torch.randperm(int(size),
-                                                    generator=g))].tolist()
+                indice = paddle.tolist(indice[list(paddle.randperm(int(size)))])
                 extra = int(
                     math.ceil(
                         size * 1.0 / self.samples_per_gpu / self.num_replicas)
@@ -142,8 +144,8 @@ class DistributedGroupSampler(Sampler):
 
         indices = [
             indices[j] for i in list(
-                torch.randperm(
-                    len(indices) // self.samples_per_gpu, generator=g))
+                paddle.randperm(
+                    len(indices) // self.samples_per_gpu))
             for j in range(i * self.samples_per_gpu, (i + 1) *
                            self.samples_per_gpu)
         ]

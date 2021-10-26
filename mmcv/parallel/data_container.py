@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import functools
 
-import torch
+# import torch
 
 
 def assert_tensor_type(func):

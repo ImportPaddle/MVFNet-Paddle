@@ -1,8 +1,8 @@
 """video dataset"""
 import os.path as osp
 import copy
-from .base import BaseDataset
-from .builder import DATASETS
+from codes.datasets.base import BaseDataset
+from codes.datasets.builder import DATASETS
 import random
 # TODO: More efficient
 @DATASETS.register_module

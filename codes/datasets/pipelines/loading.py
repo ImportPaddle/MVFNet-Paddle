@@ -1,9 +1,9 @@
 """loading"""
 import os.path as osp
-import mmcv
+# import mmcv
 import numpy as np
-from ...utils import FileClient, get_root_logger
-from ..builder import PIPELINES
+from codes.utils import FileClient, get_root_logger
+from codes.datasets.builder import PIPELINES
 logger = get_root_logger()
 # from io import StringIO, BytesIO
 # import collections

@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import torch
-from torch.nn.parallel.distributed import (DistributedDataParallel,
-                                           _find_tensors)
+# import torch
+# from torch.nn.parallel.distributed import (DistributedDataParallel,
+#                                            _find_tensors)
 
 from mmcv import print_log
 from mmcv.utils import TORCH_VERSION, digit_version

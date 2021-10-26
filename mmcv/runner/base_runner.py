@@ -1,19 +1,18 @@
-# Copyright (c) OpenMMLab. All rights reserved.
-import copy
+# # Copyright (c) OpenMMLab. All rights reserved.
+# import copy
 import logging
 import os.path as osp
 import warnings
 from abc import ABCMeta, abstractmethod
-
-import torch
-from torch.optim import Optimizer
+#
+from paddle import optimizer as Optimizer
 
 import mmcv
 from ..parallel import is_module_wrapper
-from .checkpoint import load_checkpoint
+# from .checkpoint import load_checkpoint
 from .dist_utils import get_dist_info
-from .hooks import HOOKS, Hook
-from .log_buffer import LogBuffer
+# from .hooks import HOOKS, Hook
+# from .log_buffer import LogBuffer
 from .priority import Priority, get_priority
 from .utils import get_time_str
 

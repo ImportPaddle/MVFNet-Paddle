@@ -2,8 +2,8 @@
 from collections import abc
 
 import numpy as np
-import torch
-
+# import torch
+import paddle
 
 def cast_tensor_type(inputs, src_type, dst_type):
     """Recursively convert Tensor in inputs from src_type to dst_type.
@@ -16,7 +16,7 @@ def cast_tensor_type(inputs, src_type, dst_type):
     Returns:
         The same type with inputs, but all contained Tensors have been cast.
     """
-    if isinstance(inputs, torch.Tensor):
+    if isinstance(inputs, paddle.Tensor):
         return inputs.to(dst_type)
     elif isinstance(inputs, str):
         return inputs

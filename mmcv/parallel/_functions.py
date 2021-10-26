@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import torch
-from torch.nn.parallel._functions import _get_stream
+# import torch
+# from torch.nn.parallel._functions import _get_stream
 
 
 def scatter(input, devices, streams=None):

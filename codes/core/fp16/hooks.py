@@ -3,13 +3,13 @@
 import copy
 
 
-from mmcv.runner import OptimizerHook
+# from mmcv.runner import OptimizerHook
 
 import paddle
 import paddle.nn as nn
 
-from ..dist_utils import allreduce_grads
-from .utils import cast_tensor_type
+from codes.core.dist_utils import allreduce_grads
+from codes.core.fp16.utils import cast_tensor_type
 
 
 class Fp16OptimizerHook(OptimizerHook):
@@ -132,8 +132,8 @@ def patch_norm_fp32(module):
     if isinstance(module, (nn.Layer.batchnorm._BatchNorm, nn.GroupNorm)):
         module.float()
         if isinstance(module, nn.GroupNorm):
-            module.forward = patch_forward_method(module.forward, paddle.Tensor.half,
-                                                  paddle.Tensor.float)
+            module.forward = patch_forward_method(module.forward, paddle.float16,
+                                                  paddle.float32)
     for child in module.children():
         patch_norm_fp32(child)
     return module

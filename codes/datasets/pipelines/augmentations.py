@@ -3,10 +3,10 @@ import math
 import random
 
 import cv2
-import mmcv
+# import mmcv
 import numpy as np
 
-from ..builder import PIPELINES
+from codes.datasets.builder import PIPELINES
 
 
 @PIPELINES.register_module

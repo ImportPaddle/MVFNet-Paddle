@@ -2,8 +2,8 @@
 import copy
 import os.path as osp
 
-from .base import BaseDataset
-from .builder import DATASETS
+from codes.datasets.base import BaseDataset
+from codes.datasets.builder import DATASETS
 
 
 @DATASETS.register_module

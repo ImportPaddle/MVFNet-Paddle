@@ -3,9 +3,9 @@
 import copy
 from abc import ABCMeta, abstractmethod
 
-from torch.utils.data import Dataset
-
-from .pipelines import Compose
+# from torch.utils.data import Dataset
+from paddle.io import Dataset
+from codes.datasets.pipelines import Compose
 
 
 class BaseDataset(Dataset, metaclass=ABCMeta):

@@ -3,10 +3,11 @@
 import os
 import os.path as osp
 
-import mmcv
+# import mmcv
+# from mmcv.runner import Hook, obj_from_dict
 import paddle
-from mmcv.runner import Hook, obj_from_dict
 from paddle.io import Dataset
+
 
 from .accuracy import top_k_accuracy
 from ..parallel import collate, scatter
@@ -41,7 +42,8 @@ class DistEvalHook(Hook):
         for idx in range(runner.rank, len(self.dataset), runner.world_size):
             data = self.dataset[idx]
             data_gpu = scatter(
-                collate([data], samples_per_gpu=1))
+                collate([data], samples_per_gpu=1),
+                paddle.distributed.get_rank())
 
             # compute output
             with paddle.no_grad():

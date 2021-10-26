@@ -1,11 +1,14 @@
 """ https://github.com/pytorch/pytorch/issues/973"""
 import resource
 
-from torch.distributed import get_rank, get_world_size
+# from torch.distributed import get_rank, get_world_size
 # from mmcv.parallel import collate
-from torch.utils.data import DataLoader  # , DistributedSampler
+# from torch.utils.data import DataLoader  # , DistributedSampler
 
-from .sampler import DistributedSampler
+from paddle.io import DataLoader
+from paddle.distributed import get_rank,get_world_size
+
+from codes.datasets.loader.sampler import DistributedSampler
 
 # from functools import partial
 
@@ -42,10 +45,9 @@ def build_dataloader(dataset,
     data_loader = DataLoader(
         dataset,
         batch_size=batch_size,
-        sampler=sampler,
+        batch_sampler=sampler,
         num_workers=num_workers,
         # collate_fn=partial(collate, samples_per_gpu=videos_per_gpu),
-        pin_memory=pin_memory,
         shuffle=shuffle,
         **kwargs)
 

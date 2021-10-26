@@ -1,12 +1,12 @@
 """formating"""
 from collections.abc import Sequence
 
-import mmcv
+# import mmcv
 import numpy as np
-import torch
-from mmcv.parallel import DataContainer as DC
-
-from ..builder import PIPELINES
+# import torch
+# from mmcv.parallel import DataContainer as DC
+import paddle
+from codes.datasets.builder import PIPELINES
 
 
 def to_tensor(data):
@@ -15,16 +15,16 @@ def to_tensor(data):
     Supported types are: :class:`numpy.ndarray`, :class:`torch.Tensor`,
     :class:`Sequence`, :class:`int` and :class:`float`.
     """
-    if isinstance(data, torch.Tensor):
+    if isinstance(data, paddle.Tensor):
         return data
     elif isinstance(data, np.ndarray):
-        return torch.from_numpy(data)
+        return paddle.to_tensor(data)
     elif isinstance(data, Sequence) and not mmcv.is_str(data):
-        return torch.tensor(data)
+        return paddle.to_tensor(data)
     elif isinstance(data, int):
-        return torch.LongTensor([data])
+        return paddle.to_tensor([data],dtype=paddle.int64)
     elif isinstance(data, float):
-        return torch.FloatTensor([data])
+        return paddle.to_tensor([data],dtype=paddle.float32)
     else:
         raise TypeError('type {} cannot be converted to tensor.'.format(
             type(data)))

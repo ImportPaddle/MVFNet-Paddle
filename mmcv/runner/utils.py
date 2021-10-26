@@ -8,8 +8,8 @@ from getpass import getuser
 from socket import gethostname
 
 import numpy as np
-import torch
-
+# import torch
+import paddle
 import mmcv
 
 

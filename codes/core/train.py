@@ -7,15 +7,17 @@ import re
 from collections import OrderedDict
 
 import numpy as np
-import torch
-from mmcv.runner import DistSamplerSeedHook, Runner, obj_from_dict
+# import torch
+# from mmcv.runner import DistSamplerSeedHook, Runner, obj_from_dict
 
-from ..datasets import build_dataloader
-from ..utils import get_root_logger, load_checkpoint
-from .dist_utils import DistOptimizerHook
-from .evaluation import DistEvalTopKAccuracyHook
-from .fp16 import Fp16OptimizerHook
-from .parallel import MMDataParallel, MMDistributedDataParallel
+import paddle
+
+from codes.datasets import build_dataloader
+from codes.utils import get_root_logger, load_checkpoint
+from codes.core.dist_utils import DistOptimizerHook
+from codes.core.evaluation import DistEvalTopKAccuracyHook
+from codes.core.fp16 import Fp16OptimizerHook
+from codes.core.parallel import MMDataParallel, MMDistributedDataParallel
 
 # from torch.nn.parallel import DataParallel, DistributedDataParallel
 
@@ -23,16 +25,16 @@ from .parallel import MMDataParallel, MMDistributedDataParallel
 def set_random_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
+    # torch.manual_seed(seed)
+    # torch.cuda.manual_seed(seed)
+    # torch.cuda.manual_seed_all(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
 
 
 def parse_losses(losses):
     log_vars = OrderedDict()
     for loss_name, loss_value in losses.items():
-        if isinstance(loss_value, torch.Tensor):
+        if isinstance(loss_value, paddle.Tensor):
             log_vars[loss_name] = loss_value.mean()
         elif isinstance(loss_value, list):
             log_vars[loss_name] = sum(_loss.mean() for _loss in loss_value)
@@ -112,7 +114,7 @@ def build_optimizer(model, optimizer_cfg):
     paramwise_options = optimizer_cfg.pop('paramwise_options', None)
     # if no paramwise option is specified, just use the global setting
     if paramwise_options is None:
-        return obj_from_dict(optimizer_cfg, torch.optim,
+        return obj_from_dict(optimizer_cfg, paddle.optimizer,
                              dict(params=model.parameters()))
     else:
         assert isinstance(paramwise_options, dict)
@@ -152,7 +154,7 @@ def build_optimizer(model, optimizer_cfg):
 
             params.append(param_group)
 
-        optimizer_cls = getattr(torch.optim, optimizer_cfg.pop('type'))
+        optimizer_cls = getattr(paddle.optimizer, optimizer_cfg.pop('type'))
         return optimizer_cls(params, **optimizer_cfg)
 
 

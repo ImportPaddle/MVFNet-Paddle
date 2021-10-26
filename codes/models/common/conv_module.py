@@ -1,12 +1,13 @@
 import warnings
 
-import torch.nn as nn
+# import torch.nn as nn
+import paddle.nn as nn
 from mmcv.cnn import constant_init, kaiming_init
 
 from .norm import build_norm_layer
 
 conv_cfg = {
-    'Conv': nn.Conv2d,
+    'Conv': nn.Conv2D,
     # 'ConvWS': ConvWS2d,
     # TODO: octave conv
 }
@@ -14,14 +15,14 @@ conv_cfg = {
 
 def conv3x3(in_planes, out_planes, stride=1, dilation=1):
     "3x3 convolution with padding"
-    return nn.Conv2d(
+    return nn.Conv2D(
         in_planes,
         out_planes,
         kernel_size=3,
         stride=stride,
         padding=dilation,
         dilation=dilation,
-        bias=False)
+        bias_attr=False)
 
 
 def build_conv_layer(cfg, *args, **kwargs):
@@ -33,7 +34,7 @@ def build_conv_layer(cfg, *args, **kwargs):
             layer args: args needed to instantiate a conv layer.
 
     Returns:
-        layer (nn.Module): created conv layer
+        layer (nn.Layer): created conv layer
     """
     if cfg is None:
         cfg_ = dict(type='Conv')
@@ -52,19 +53,19 @@ def build_conv_layer(cfg, *args, **kwargs):
     return layer
 
 
-class ConvModule(nn.Module):
+class ConvModule(nn.Layer):
     """A conv block that contains conv/norm/activation layers.
 
     Args:
-        in_channels (int): Same as nn.Conv2d.
-        out_channels (int): Same as nn.Conv2d.
-        kernel_size (int or tuple[int]): Same as nn.Conv2d.
-        stride (int or tuple[int]): Same as nn.Conv2d.
-        padding (int or tuple[int]): Same as nn.Conv2d.
-        dilation (int or tuple[int]): Same as nn.Conv2d.
-        groups (int): Same as nn.Conv2d.
-        bias (bool or str): If specified as `auto`, it will be decided by the
-            norm_cfg. Bias will be set as True if norm_cfg is None, otherwise
+        in_channels (int): Same as nn.Conv2D.
+        out_channels (int): Same as nn.Conv2D.
+        kernel_size (int or tuple[int]): Same as nn.Conv2D.
+        stride (int or tuple[int]): Same as nn.Conv2D.
+        padding (int or tuple[int]): Same as nn.Conv2D.
+        dilation (int or tuple[int]): Same as nn.Conv2D.
+        groups (int): Same as nn.Conv2D.
+        bias_attr (bool or str): If specified as `auto`, it will be decided by the
+            norm_cfg. bias_attr will be set as True if norm_cfg is None, otherwise
             False.
         conv_cfg (dict): Config dict for convolution layer.
         norm_cfg (dict): Config dict for normalization layer.
@@ -83,7 +84,7 @@ class ConvModule(nn.Module):
                  padding=0,
                  dilation=1,
                  groups=1,
-                 bias='auto',
+                 bias_attr='auto',
                  conv_cfg=None,
                  norm_cfg=None,
                  activation='relu',
@@ -102,13 +103,13 @@ class ConvModule(nn.Module):
 
         self.with_norm = norm_cfg is not None
         self.with_activatation = activation is not None
-        # if the conv layer is before a norm layer, bias is unnecessary.
-        if bias == 'auto':
-            bias = False if self.with_norm else True
-        self.with_bias = bias
+        # if the conv layer is before a norm layer, bias_attr is unnecessary.
+        if bias_attr == 'auto':
+            bias_attr = False if self.with_norm else True
+        self.with_bias = bias_attr
 
         if self.with_norm and self.with_bias:
-            warnings.warn('ConvModule has norm and bias at the same time')
+            warnings.warn('ConvModule has norm and bias_attr at the same time')
 
         # build convolution layer
         self.conv = build_conv_layer(
@@ -120,7 +121,7 @@ class ConvModule(nn.Module):
             padding=padding,
             dilation=dilation,
             groups=groups,
-            bias=bias)
+            bias_attr=bias_attr)
         # export the attributes of self.conv to a higher level for convenience
         self.in_channels = self.conv.in_channels
         self.out_channels = self.conv.out_channels
@@ -149,7 +150,7 @@ class ConvModule(nn.Module):
                 raise ValueError('{} is currently not supported.'.format(
                     self.activation))
             if self.activation == 'relu':
-                self.activate = nn.ReLU(inplace=inplace)
+                self.activate = nn.ReLU()
 
         # Use msra init by default
         self.init_weights()

@@ -3,10 +3,12 @@ import os.path as osp
 import pickle
 import shutil
 import tempfile
-import mmcv
-import torch
-import torch.distributed as dist
-from mmcv.runner import get_dist_info
+# import mmcv
+# import torch
+# import torch.distributed as dist
+# from mmcv.runner import get_dist_info
+
+import paddle
 
 
 def single_gpu_test(model, data_loader, save_vididx=False):
@@ -24,7 +26,7 @@ def single_gpu_test(model, data_loader, save_vididx=False):
     dataset = data_loader.dataset
     prog_bar = mmcv.ProgressBar(len(dataset))
     for i, data in enumerate(data_loader):
-        with torch.no_grad():
+        with paddle.no_grad():
             result = model(return_loss=False, return_numpy=False, **data)
         results.append(result)
         if save_vididx:
@@ -65,7 +67,7 @@ def multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=True, save_vidid
         prog_bar = mmcv.ProgressBar(len(dataset))
 
     for data in data_loader:
-        with torch.no_grad():
+        with paddle.no_grad():
             result = model(return_loss=False, **data)
         if save_vididx:
             vids.append(data['vid_idx'])
@@ -106,16 +108,16 @@ def collect_results_cpu(result_part, size, tmpdir=None):
     if tmpdir is None:
         MAX_LEN = 512
         # 32 is whitespace
-        dir_tensor = torch.full((MAX_LEN, ),
+        dir_tensor = paddle.full((MAX_LEN, ),
                                 32,
-                                dtype=torch.uint8,
-                                device='cuda')
+                                dtype=paddle.uint8,
+                                )
         if rank == 0:
             tmpdir = tempfile.mkdtemp()
-            tmpdir = torch.tensor(
-                bytearray(tmpdir.encode()), dtype=torch.uint8, device='cuda')
+            tmpdir = paddle.to_tensor(
+                bytearray(tmpdir.encode()), dtype=paddle.uint8)
             dir_tensor[:len(tmpdir)] = tmpdir
-        dist.broadcast(dir_tensor, 0)
+        paddle.distributed.broadcast(dir_tensor, 0)
         tmpdir = dir_tensor.cpu().numpy().tobytes().decode().rstrip()
     else:
         mmcv.mkdir_or_exist(tmpdir)
@@ -123,7 +125,7 @@ def collect_results_cpu(result_part, size, tmpdir=None):
     print('rank {} begin dump'.format(rank), flush=True)
     mmcv.dump(result_part, osp.join(tmpdir, 'part_{}.pkl'.format(rank)))
     print('rank {} finished dump'.format(rank), flush=True)
-    dist.barrier()
+    paddle.distributed.barrier()
     # collect all parts
     if rank != 0:
         return None
@@ -156,21 +158,21 @@ def collect_results_gpu(result_part, size):
     """
     rank, world_size = get_dist_info()
     # dump result part to tensor with pickle
-    part_tensor = torch.tensor(
-        bytearray(pickle.dumps(result_part)), dtype=torch.uint8, device='cuda')
+    part_tensor = paddle.to_tensor(
+        bytearray(pickle.dumps(result_part)), dtype=paddle.uint8)
     # gather all result part tensor shape
-    shape_tensor = torch.tensor(part_tensor.shape, device='cuda')
+    shape_tensor = paddle.to_tensor(part_tensor.shape)
     shape_list = [shape_tensor.clone() for _ in range(world_size)]
-    dist.all_gather(shape_list, shape_tensor)
+    paddle.distributed.all_gather(shape_list, shape_tensor)
     # padding result part tensor to max length
-    shape_max = torch.tensor(shape_list).max()
-    part_send = torch.zeros(shape_max, dtype=torch.uint8, device='cuda')
+    shape_max = paddle.to_tensor(shape_list).max()
+    part_send = paddle.zeros(shape_max, dtype=paddle.uint8)
     part_send[:shape_tensor[0]] = part_tensor
     part_recv_list = [
         part_tensor.new_zeros(shape_max) for _ in range(world_size)
     ]
     # gather all result part
-    dist.all_gather(part_recv_list, part_send)
+    paddle.distributed.all_gather(part_recv_list, part_send)
     if rank == 0:
         part_list = []
         for recv, shape in zip(part_recv_list, shape_list):

@@ -1,5 +1,5 @@
 """build dataset from config dict"""
-from ..utils import Registry, build_from_cfg
+from codes.utils import Registry, build_from_cfg
 
 DATASETS = Registry('dataset')
 PIPELINES = Registry('pipeline')

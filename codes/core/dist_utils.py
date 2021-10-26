@@ -4,12 +4,12 @@ import os
 import subprocess
 from collections import OrderedDict
 
-import torch
-import torch.distributed as dist
-import torch.multiprocessing as mp
-from mmcv.runner import OptimizerHook
-from torch._utils import (_flatten_dense_tensors, _take_tensors,
-                          _unflatten_dense_tensors)
+# import torch
+# import torch.distributed as dist
+# import torch.multiprocessing as mp
+# from mmcv.runner import OptimizerHook
+# from torch._utils import (_flatten_dense_tensors, _take_tensors,
+#                           _unflatten_dense_tensors)
 
 
 def _allreduce_coalesced(tensors, world_size, bucket_size_mb=-1):

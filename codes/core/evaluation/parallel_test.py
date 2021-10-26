@@ -4,7 +4,7 @@ import multiprocessing
 import mmcv
 
 import paddle
-from ...utils import load_checkpoint
+from codes.utils import load_checkpoint
 
 
 def worker_func(model_cls, model_kwargs, checkpoint, dataset, data_func,
