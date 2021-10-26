@@ -10,7 +10,7 @@ from paddle.io import Dataset
 
 from .accuracy import top_k_accuracy
 from ..parallel import collate, scatter
-from ... import datasets
+from codes import datasets
 
 
 class DistEvalHook(Hook):
