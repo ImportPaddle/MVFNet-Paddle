@@ -4,14 +4,13 @@ import os
 import os.path as osp
 
 import mmcv
-import torch
-import torch.distributed as dist
+import paddle
 from mmcv.runner import Hook, obj_from_dict
-from torch.utils.data import Dataset
+from paddle.io import Dataset
 
-from ... import datasets
-from ..parallel import collate, scatter
 from .accuracy import top_k_accuracy
+from ..parallel import collate, scatter
+from codes import datasets
 
 
 class DistEvalHook(Hook):
@@ -42,11 +41,10 @@ class DistEvalHook(Hook):
         for idx in range(runner.rank, len(self.dataset), runner.world_size):
             data = self.dataset[idx]
             data_gpu = scatter(
-                collate([data], samples_per_gpu=1),
-                [torch.cuda.current_device()])[0]
+                collate([data], samples_per_gpu=1))
 
             # compute output
-            with torch.no_grad():
+            with paddle.no_grad():
                 result = runner.model(return_loss=False, **data_gpu)
             results[idx] = result
 
@@ -57,7 +55,7 @@ class DistEvalHook(Hook):
 
         tmp_file = osp.join(runner.work_dir, 'temp_{}.pkl'.format(runner.rank))
         mmcv.dump(results, tmp_file)
-        dist.barrier()
+        paddle.distributed.barrier()
 
         if runner.rank == 0:
             print('\n')

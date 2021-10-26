@@ -3,6 +3,7 @@ import functools
 from inspect import getfullargspec
 
 import torch
+import paddle
 
 from .utils import cast_tensor_type
 
@@ -46,7 +47,7 @@ def auto_fp16(apply_to=None, out_fp32=False):
             """function """
             # check if the module has set the attribute `fp16_enabled`, if not,
             # just fallback to the original method.
-            if not isinstance(args[0], torch.nn.Module):
+            if not isinstance(args[0], paddle.nn.Layer):
                 raise TypeError('@auto_fp16 can only be used to decorate the '
                                 'method of nn.Module')
             if not (hasattr(args[0], 'fp16_enabled') and args[0].fp16_enabled):
@@ -63,7 +64,7 @@ def auto_fp16(apply_to=None, out_fp32=False):
                 for i, arg_name in enumerate(arg_names):
                     if arg_name in args_to_cast:
                         new_args.append(
-                            cast_tensor_type(args[i], torch.float, torch.half))
+                            cast_tensor_type(args[i], paddle.Tensor.float, paddle.Tensor.half))
                     else:
                         new_args.append(args[i])
             # convert the kwargs that need to be processed
@@ -72,14 +73,14 @@ def auto_fp16(apply_to=None, out_fp32=False):
                 for arg_name, arg_value in kwargs.items():
                     if arg_name in args_to_cast:
                         new_kwargs[arg_name] = cast_tensor_type(
-                            arg_value, torch.float, torch.half)
+                            arg_value, tpaddle.Tensor.float, paddle.Tensor.half)
                     else:
                         new_kwargs[arg_name] = arg_value
             # apply converted arguments to the decorated method
             output = old_func(*new_args, **new_kwargs)
             # cast the results back to fp32 if necessary
             if out_fp32:
-                output = cast_tensor_type(output, torch.half, torch.float)
+                output = cast_tensor_type(output, paddle.Tensor.half, paddle.Tensor.float)
             return output
 
         return new_func
@@ -127,7 +128,7 @@ def force_fp32(apply_to=None, out_fp16=False):
             """function"""
             # check if the module has set the attribute `fp16_enabled`, if not,
             # just fallback to the original method.
-            if not isinstance(args[0], torch.nn.Module):
+            if not isinstance(args[0], paddle.nn.Layer):
                 raise TypeError('@force_fp32 can only be used to decorate the '
                                 'method of nn.Module')
             if not (hasattr(args[0], 'fp16_enabled') and args[0].fp16_enabled):
@@ -143,7 +144,7 @@ def force_fp32(apply_to=None, out_fp16=False):
                 for i, arg_name in enumerate(arg_names):
                     if arg_name in args_to_cast:
                         new_args.append(
-                            cast_tensor_type(args[i], torch.half, torch.float))
+                            cast_tensor_type(args[i], paddle.Tensor.half, paddle.Tensor.float))
                     else:
                         new_args.append(args[i])
             # convert the kwargs that need to be processed
@@ -152,14 +153,14 @@ def force_fp32(apply_to=None, out_fp16=False):
                 for arg_name, arg_value in kwargs.items():
                     if arg_name in args_to_cast:
                         new_kwargs[arg_name] = cast_tensor_type(
-                            arg_value, torch.half, torch.float)
+                            arg_value, paddle.Tensor.half, paddle.Tensor.float)
                     else:
                         new_kwargs[arg_name] = arg_value
             # apply converted arguments to the decorated method
             output = old_func(*new_args, **new_kwargs)
             # cast the results back to fp32 if necessary
             if out_fp16:
-                output = cast_tensor_type(output, torch.float, torch.half)
+                output = cast_tensor_type(output, paddle.Tensor.float, paddle.Tensor.half)
             return output
 
         return new_func

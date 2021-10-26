@@ -2,8 +2,8 @@
 import multiprocessing
 
 import mmcv
-import torch
 
+import paddle
 from ...utils import load_checkpoint
 
 
@@ -23,10 +23,10 @@ def worker_func(model_cls, model_kwargs, checkpoint, dataset, data_func,
     """
     model = model_cls(**model_kwargs)
     load_checkpoint(model, checkpoint, map_location='cpu')
-    torch.cuda.set_device(gpu_id)
+    paddle.device.set_device('gpu:'.format(gpu_id))
     model.cuda()
     model.eval()
-    with torch.no_grad():
+    with paddle.no_grad():
         while True:
             idx = idx_queue.get()
             data = dataset[idx]

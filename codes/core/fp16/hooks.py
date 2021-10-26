@@ -1,9 +1,12 @@
 """Mixed Precision Training Hook"""
+
 import copy
 
-import torch
-import torch.nn as nn
+
 from mmcv.runner import OptimizerHook
+
+import paddle
+import paddle.nn as nn
 
 from ..dist_utils import allreduce_grads
 from .utils import cast_tensor_type
@@ -126,11 +129,11 @@ def patch_norm_fp32(module):
         nn.Module: The converted module, the normalization layers have been
             converted to FP32.
     """
-    if isinstance(module, (nn.modules.batchnorm._BatchNorm, nn.GroupNorm)):
+    if isinstance(module, (nn.Layer.batchnorm._BatchNorm, nn.GroupNorm)):
         module.float()
-        if isinstance(module, nn.GroupNorm) or torch.__version__ < '1.3':
-            module.forward = patch_forward_method(module.forward, torch.half,
-                                                  torch.float)
+        if isinstance(module, nn.GroupNorm):
+            module.forward = patch_forward_method(module.forward, paddle.Tensor.half,
+                                                  paddle.Tensor.float)
     for child in module.children():
         patch_norm_fp32(child)
     return module
